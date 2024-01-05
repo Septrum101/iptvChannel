@@ -1,0 +1,8 @@
+LogLevel: debug
+Cron: "5 * * * *"
+MaxConcurrent: 5
+ApiHost: "http://YOUR_API_HOST"
+UserID: "YOUR_IPTV_ID"
+Authenticator: "YOUR_PRIVATE_KEY"
+Address: 0.0.0.0:8888
+UdpxyHost: "http://YOUR_UDPXY_ADDR"
