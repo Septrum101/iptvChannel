@@ -1,33 +1,16 @@
 package channel
 
 import (
-	"bytes"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/mitchellh/mapstructure"
 )
 
 func BytesToChannels(resp []byte) ([]Channel, error) {
-	doc, err := goquery.NewDocumentFromReader(bytes.NewBuffer(resp))
-	if err != nil {
-		return nil, err
-	}
-
-	var data []string
-	re := regexp.MustCompile(`\((.*?)\)`)  // filter strings in ()
-	re1 := regexp.MustCompile(`'([^']*)'`) // filter strings in ''
-
-	// use the goquery document...
-	_ = doc.Find("script:contains(ChannelName)").Each(func(i int, selection *goquery.Selection) {
-		matches := re.FindStringSubmatch(selection.Text())
-		if len(matches) > 1 {
-			matches2 := re1.FindAllStringSubmatch(matches[1], -1)
-			data = append(data, matches2[1][1]) // 用1而非0作为索引
-		}
-	})
+	re := regexp.MustCompile(`(?s)ChannelID="\d*".*?ChannelFECPort="\d*"`)
+	data := re.FindAllString(string(resp), -1)
 
 	var channelMaps []map[string]any
 	re2 := regexp.MustCompile(`画中画|单音轨`)
@@ -36,7 +19,8 @@ func BytesToChannels(resp []byte) ([]Channel, error) {
 			continue
 		}
 
-		res := strings.Split(data[i], ",")
+		d := data[i]
+		res := strings.Split(d, ",")
 		kvMap := make(map[string]any)
 		for ii := range res {
 			kvs := strings.SplitN(res[ii], "=", 2)

@@ -121,15 +121,13 @@ func (c *Controller) fetchEPGs() error {
 				logger.Error(err)
 				return
 			}
-			epgs, err := epg.GetEPGs(resp)
+			epgs, err := epg.BytesToValidEPGs(resp)
 			if err != nil {
 				logger.Error(err)
 				return
 			}
-			if len(epgs) > 0 {
-				for i := range epgs {
-					es <- epgs[i]
-				}
+			for i := range epgs {
+				es <- epgs[i]
 			}
 		}(i)
 	}
