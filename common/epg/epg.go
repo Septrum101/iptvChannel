@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/thank243/iptvChannel/infra"
 )
 
 func BytesToAllEPGs(resp []byte) ([]Epg, error) {
@@ -49,39 +51,37 @@ func BytesToValidEPGs(resp []byte) ([]Epg, error) {
 	}
 
 	var epgs []Epg
-	tz := time.FixedZone("CST", 3600*8)
+	tz := time.FixedZone("CST", 8*60*60)
 	for i := range allEPGs {
-		epg, err := filterEPGs(&allEPGs[i], tz)
-		if err != nil {
-			continue
+		if err := allEPGs[i].filterValidEPG(tz); err == nil {
+			epgs = append(epgs, allEPGs[i])
 		}
-
-		epgs = append(epgs, *epg)
 	}
 
 	return epgs, nil
 }
 
-func filterEPGs(e *Epg, tz *time.Location) (*Epg, error) {
+func (e *Epg) filterValidEPG(tz *time.Location) error {
 	// time format: 20231228001700
-	endTime, err := time.ParseInLocation("20060102150405", e.EndTimeFormat, tz)
+	endTime, err := infra.StrToTime(e.EndTimeFormat, tz)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	beginTime, err := time.ParseInLocation("20060102150405", e.BeginTimeFormat, tz)
+	beginTime, err := infra.StrToTime(e.BeginTimeFormat, tz)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if beginTime.Sub(endTime) > 0 {
-		endTime = beginTime
+	if beginTime.Sub(*endTime) > 0 {
+		*endTime = endTime.AddDate(0, 0, 1)
+		e.EndTimeFormat = endTime.Format("20060102150405")
 	}
 
-	if time.Since(endTime) > time.Hour {
-		return nil, fmt.Errorf("not a valid EPG: %s [%s] -> %s", e.ChannelId, e.ProgramName, e.EndTimeFormat)
+	if time.Since(*endTime) > time.Hour {
+		return fmt.Errorf("not a valid EPG: %s [%s] -> %s", e.ChannelId, e.ProgramName, e.EndTimeFormat)
 
 	}
 
-	return e, nil
+	return nil
 }
