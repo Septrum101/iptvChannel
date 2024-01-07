@@ -15,14 +15,6 @@ func TestGetEpg(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	es, err := BytesToAllEPGs(resp)
-	if err != nil {
-		t.Error(err)
-	}
-	for i := range es {
-		t.Log(es[i])
-	}
-	t.Logf("Total EPGs: %d", len(es))
 
 	validEs, err := BytesToValidEPGs(resp)
 	if err != nil {

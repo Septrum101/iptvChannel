@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"regexp"
+	"net/url"
 	"strconv"
 	"sync/atomic"
 
@@ -88,12 +88,15 @@ func (h *Handler) getChannels(c echo.Context) error {
 	b := bytes.Buffer{}
 	b.WriteString("#EXTM3U\n")
 
-	re3 := regexp.MustCompile(`\d.*\d`)
-
 	for _, ch := range channels {
 		name := ch.ChannelName
+		addr, err := url.Parse(ch.ChannelURL)
+		if err != nil {
+			continue
+		}
+
 		b.WriteString(fmt.Sprintf("#EXTINF:-1, tvg-id=\"%d\" tvg-name=\"%s\", %s\n", ch.ChannelID, name, name))
-		b.WriteString(fmt.Sprintf("%s/rtp/%s\n", h.udpxyHost, re3.FindString(ch.ChannelURL)))
+		b.WriteString(fmt.Sprintf("%s/rtp/%s\n", h.udpxyHost, addr.Host))
 	}
 
 	return c.Blob(http.StatusOK, "text/plain;charset=UTF-8", b.Bytes())

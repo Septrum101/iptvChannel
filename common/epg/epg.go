@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -12,7 +13,7 @@ import (
 	"github.com/thank243/iptvChannel/infra"
 )
 
-func BytesToAllEPGs(resp []byte) ([]Epg, error) {
+func BytesToValidEPGs(resp []byte) ([]Epg, error) {
 	re := regexp.MustCompile(`(?s)\[.*]`)
 	b := re.FindSubmatch(resp)
 	if b == nil {
@@ -33,55 +34,56 @@ func BytesToAllEPGs(resp []byte) ([]Epg, error) {
 		return nil, err
 	}
 
-	var epgs []Epg
+	var validEPGs []Epg
+	tz := time.FixedZone("CST", 8*60*60)
 	for i := range data {
 		e := data[i]
 		for ii := range e {
-			epgs = append(epgs, e[ii])
+			if err := e[ii].filterValidEPG(tz); err != nil {
+				continue
+			}
+			validEPGs = append(validEPGs, e[ii])
 		}
 	}
 
-	return epgs, nil
-}
-
-func BytesToValidEPGs(resp []byte) ([]Epg, error) {
-	allEPGs, err := BytesToAllEPGs(resp)
-	if err != nil {
-		return nil, err
-	}
-
-	var epgs []Epg
-	tz := time.FixedZone("CST", 8*60*60)
-	for i := range allEPGs {
-		if err := allEPGs[i].filterValidEPG(tz); err == nil {
-			epgs = append(epgs, allEPGs[i])
-		}
-	}
-
-	return epgs, nil
+	return validEPGs, nil
 }
 
 func (e *Epg) filterValidEPG(tz *time.Location) error {
-	// time format: 20231228001700
-	endTime, err := infra.StrToTime(e.EndTimeFormat, tz)
+	endTime, err := e.fixEndTime(tz)
 	if err != nil {
 		return err
 	}
 
-	beginTime, err := infra.StrToTime(e.BeginTimeFormat, tz)
-	if err != nil {
-		return err
-	}
-
-	if beginTime.Sub(*endTime) > 0 {
-		*endTime = endTime.AddDate(0, 0, 1)
-		e.EndTimeFormat = endTime.Format("20060102150405")
-	}
-
-	if time.Since(*endTime) > time.Hour {
+	if time.Since(endTime) > time.Hour {
 		return fmt.Errorf("not a valid EPG: %s [%s] -> %s", e.ChannelId, e.ProgramName, e.EndTimeFormat)
 
 	}
 
+	// fix char 65533 (Replacement Character)
+	if strings.Contains(e.ProgramName, string(rune(65533))) {
+		e.ProgramName = strings.ReplaceAll(e.ProgramName, string(rune(65533)), "")
+	}
+
 	return nil
+}
+
+func (e *Epg) fixEndTime(tz *time.Location) (time.Time, error) {
+	// time format: 20231228001700
+	endTime, err := infra.StrToTime(e.EndTimeFormat, tz)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	beginTime, err := infra.StrToTime(e.BeginTimeFormat, tz)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if beginTime.Sub(endTime) > 0 {
+		endTime = endTime.AddDate(0, 0, 1)
+		e.EndTimeFormat = endTime.Format("20060102150405")
+	}
+
+	return endTime, nil
 }
