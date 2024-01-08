@@ -7,7 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/thank243/iptvChannel/app/handler"
+	"github.com/thank243/iptvChannel/app/server"
 	"github.com/thank243/iptvChannel/common/channel"
 	"github.com/thank243/iptvChannel/common/epg"
 	"github.com/thank243/iptvChannel/common/req"
@@ -18,7 +18,7 @@ func New(c *config.Config) (*Controller, error) {
 	ctrl := &Controller{
 		conf:          c,
 		req:           req.New(c),
-		server:        handler.New(c),
+		server:        server.New(c),
 		cron:          cron.New(),
 		maxConcurrent: c.MaxConcurrent,
 	}
@@ -35,13 +35,16 @@ func New(c *config.Config) (*Controller, error) {
 }
 
 func (c *Controller) Start() error {
-	config.ShowVersion()
-	fmt.Printf("LogLevel: %s, MaxConcurrent: %d\n", c.conf.LogLevel, c.maxConcurrent)
-
+	fmt.Printf("%s\nLogLevel: %s, MaxConcurrent: %d\n", config.GetVersion(), c.conf.LogLevel, c.maxConcurrent)
 	log.Info("Starting service..")
+
 	log.Info("Fetch EPGs and Channels data on initial startup")
 	c.Run()
+
+	// start cron job
 	c.cron.Start()
+
+	// start http server
 	if err := c.server.Echo.Start(c.conf.Address); err != nil {
 		return err
 	}
@@ -99,7 +102,7 @@ func (c *Controller) fetchEPGs() error {
 
 	channels := *c.server.Channels.Load()
 
-	var es = make(chan epg.Epg)
+	var epgChan = make(chan epg.Epg)
 	var wg sync.WaitGroup
 
 	sem := make(chan bool, c.maxConcurrent) // This is used to limit the number of goroutines to maxConcurrent
@@ -127,7 +130,7 @@ func (c *Controller) fetchEPGs() error {
 				return
 			}
 			for i := range epgs {
-				es <- epgs[i]
+				epgChan <- epgs[i]
 			}
 		}(i)
 	}
@@ -135,13 +138,13 @@ func (c *Controller) fetchEPGs() error {
 	// Close the channel after all work has been done
 	go func() {
 		wg.Wait()
-		close(es)
+		close(epgChan)
 	}()
 
 	// Consume results from the channel and append to slice
 	var esSlice []epg.Epg
-	for epg := range es {
-		esSlice = append(esSlice, epg)
+	for e := range epgChan {
+		esSlice = append(esSlice, e)
 	}
 
 	c.server.EPGs.Store(&esSlice)

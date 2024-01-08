@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"sync/atomic"
@@ -7,14 +7,12 @@ import (
 
 	"github.com/thank243/iptvChannel/common/channel"
 	"github.com/thank243/iptvChannel/common/epg"
-	"github.com/thank243/iptvChannel/common/req"
 )
 
-type Handler struct {
+type Server struct {
 	Echo     *echo.Echo
 	EPGs     *atomic.Pointer[[]epg.Epg]
 	Channels *atomic.Pointer[[]channel.Channel]
 
-	req       *req.Req
 	udpxyHost string
 }

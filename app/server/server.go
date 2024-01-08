@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"bytes"
@@ -15,17 +15,15 @@ import (
 
 	"github.com/thank243/iptvChannel/common/channel"
 	"github.com/thank243/iptvChannel/common/epg"
-	"github.com/thank243/iptvChannel/common/req"
 	"github.com/thank243/iptvChannel/config"
 )
 
-// New creates a new Handler instance and configures it based on the provided config.
+// New creates a new Server instance and configures it based on the provided config.
 // It sets up the Echo instance, RequestLogger middleware, and the route handlers.
-// It returns the created Handler instance.
-func New(c *config.Config) *Handler {
-	handler := &Handler{
+// It returns the created Server instance.
+func New(c *config.Config) *Server {
+	handler := &Server{
 		Echo:      echo.New(),
-		req:       req.New(c),
 		udpxyHost: c.UdpxyHost,
 		Channels:  new(atomic.Pointer[[]channel.Channel]),
 		EPGs:      new(atomic.Pointer[[]epg.Epg]),
@@ -78,7 +76,7 @@ func New(c *config.Config) *Handler {
 	return handler
 }
 
-func (h *Handler) getChannels(c echo.Context) error {
+func (h *Server) getChannels(c echo.Context) error {
 	if h.Channels.Load() == nil {
 		return c.String(http.StatusServiceUnavailable, "no valid channels")
 	}
@@ -102,7 +100,7 @@ func (h *Handler) getChannels(c echo.Context) error {
 	return c.Blob(http.StatusOK, "text/plain;charset=UTF-8", b.Bytes())
 }
 
-func (h *Handler) getEPGs(c echo.Context) error {
+func (h *Server) getEPGs(c echo.Context) error {
 	if h.Channels.Load() == nil {
 		return c.String(http.StatusServiceUnavailable, "no valid channels")
 	}
@@ -112,6 +110,7 @@ func (h *Handler) getEPGs(c echo.Context) error {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	tv := doc.CreateElement("tv")
+	tv.CreateAttr("ext-info", config.GetVersion())
 
 	// add channel to doc
 	for i := range channels {

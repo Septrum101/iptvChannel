@@ -10,6 +10,6 @@ const (
 	desc    = "(github.com/thank243/iptvChannel)"
 )
 
-func ShowVersion() {
-	fmt.Println(appName, version, desc)
+func GetVersion() string {
+	return fmt.Sprintf("%s %s %s", appName, version, desc)
 }

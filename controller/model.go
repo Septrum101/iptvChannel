@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/robfig/cron/v3"
 
-	"github.com/thank243/iptvChannel/app/handler"
+	"github.com/thank243/iptvChannel/app/server"
 	"github.com/thank243/iptvChannel/common/req"
 	"github.com/thank243/iptvChannel/config"
 )
@@ -11,7 +11,7 @@ import (
 type Controller struct {
 	conf          *config.Config
 	req           *req.Req
-	server        *handler.Handler
+	server        *server.Server
 	cron          *cron.Cron
 	maxConcurrent int
 }
