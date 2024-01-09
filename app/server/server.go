@@ -22,14 +22,14 @@ import (
 // It sets up the Echo instance, RequestLogger middleware, and the route handlers.
 // It returns the created Server instance.
 func New(c *config.Config) *Server {
-	handler := &Server{
+	s := &Server{
 		Echo:      echo.New(),
 		udpxyHost: c.UdpxyHost,
 		Channels:  new(atomic.Pointer[[]channel.Channel]),
 		EPGs:      new(atomic.Pointer[[]epg.Epg]),
 	}
 
-	handler.Echo.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+	s.Echo.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:       true,
 		LogStatus:    true,
 		LogError:     true,
@@ -40,25 +40,27 @@ func New(c *config.Config) *Server {
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error == nil {
 				log.WithFields(log.Fields{
-					"RemoteIP":  v.RemoteIP,
-					"Method":    v.Method,
-					"URI":       v.URI,
-					"UserAgent": v.UserAgent,
-					"status":    v.Status,
+					"remote_ip":  v.RemoteIP,
+					"method":     v.Method,
+					"URI":        v.URI,
+					"user_agent": v.UserAgent,
+					"status":     v.Status,
 				}).Info("request")
 			} else {
 				log.WithFields(log.Fields{
-					"RemoteIP":  v.RemoteIP,
-					"Method":    v.Method,
-					"URI":       v.URI,
-					"UserAgent": v.UserAgent,
-					"status":    v.Status,
-					"error":     v.Error,
+					"remote_ip":  v.RemoteIP,
+					"method":     v.Method,
+					"URI":        v.URI,
+					"user_agent": v.UserAgent,
+					"status":     v.Status,
+					"error":      v.Error,
 				}).Error("request error")
 			}
 			return nil
 		},
-	}))
+	}),
+		middleware.GzipWithConfig(middleware.GzipConfig{Level: 5}),
+	)
 
 	level, err := log.ParseLevel(c.LogLevel)
 	if err != nil {
@@ -69,19 +71,19 @@ func New(c *config.Config) *Server {
 		log.SetReportCaller(true)
 	}
 
-	g := handler.Echo.Group("/api/v1")
-	g.GET("/getChannels", handler.getChannels)
-	g.GET("/getEpgs", handler.getEPGs)
+	g := s.Echo.Group("/api/v1")
+	g.GET("/getChannels", s.getChannels)
+	g.GET("/getEpgs", s.getEPGs)
 
-	return handler
+	return s
 }
 
-func (h *Server) getChannels(c echo.Context) error {
-	if h.Channels.Load() == nil {
+func (s *Server) getChannels(c echo.Context) error {
+	if s.Channels.Load() == nil {
 		return c.String(http.StatusServiceUnavailable, "no valid channels")
 	}
 
-	channels := *h.Channels.Load()
+	channels := *s.Channels.Load()
 
 	b := bytes.Buffer{}
 	b.WriteString("#EXTM3U\n")
@@ -94,18 +96,18 @@ func (h *Server) getChannels(c echo.Context) error {
 		}
 
 		b.WriteString(fmt.Sprintf("#EXTINF:-1, tvg-id=\"%d\" tvg-name=\"%s\", %s\n", ch.ChannelID, name, name))
-		b.WriteString(fmt.Sprintf("%s/rtp/%s\n", h.udpxyHost, addr.Host))
+		b.WriteString(fmt.Sprintf("%s/rtp/%s\n", s.udpxyHost, addr.Host))
 	}
 
 	return c.Blob(http.StatusOK, "text/plain;charset=UTF-8", b.Bytes())
 }
 
-func (h *Server) getEPGs(c echo.Context) error {
-	if h.Channels.Load() == nil {
+func (s *Server) getEPGs(c echo.Context) error {
+	if s.Channels.Load() == nil {
 		return c.String(http.StatusServiceUnavailable, "no valid channels")
 	}
 
-	channels := *h.Channels.Load()
+	channels := *s.Channels.Load()
 
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
@@ -128,7 +130,7 @@ func (h *Server) getEPGs(c echo.Context) error {
 	// <programme start="20240103215500 +0800" stop="20240103232500 +0800" channel="7249">
 	// <title lang="zh">实况录像</title><desc lang="zh"></desc></programme>
 
-	validEpg := h.EPGs.Load()
+	validEpg := s.EPGs.Load()
 	if validEpg != nil {
 		for i := range *validEpg {
 			e := (*validEpg)[i]
