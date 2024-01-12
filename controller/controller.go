@@ -22,7 +22,7 @@ func New(c *config.Config) (*Controller, error) {
 		cron:          cron.New(),
 		maxConcurrent: c.MaxConcurrent,
 	}
-	if c.MaxConcurrent == 0 || c.MaxConcurrent > 16 {
+	if c.MaxConcurrent > 16 {
 		ctrl.maxConcurrent = 16
 	}
 

@@ -7,9 +7,11 @@ import (
 const (
 	appName = "iptvChannel"
 	version = "0.0.3"
-	desc    = "(github.com/thank243/iptvChannel)"
+	desc    = "Sources: https://www.github.com/thank243/iptvChannel"
 )
 
+var commit = "dev"
+
 func GetVersion() string {
-	return fmt.Sprintf("%s %s %s", appName, version, desc)
+	return fmt.Sprintf("%s %s-%s \n%s", appName, version, commit, desc)
 }
