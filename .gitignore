@@ -11,3 +11,5 @@ gen
 *.out
 go.work
 config.yaml
+dist
+dist/

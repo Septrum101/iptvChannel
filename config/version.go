@@ -6,12 +6,14 @@ import (
 
 const (
 	appName = "iptvChannel"
-	version = "0.0.4"
 	desc    = "Sources: https://www.github.com/thank243/iptvChannel"
 )
 
-var commit = "dev"
+var (
+	version = "dev"
+	date    = "unknown"
+)
 
 func GetVersion() string {
-	return fmt.Sprintf("%s %s-%s \n%s", appName, version, commit, desc)
+	return fmt.Sprintf("%s %s, built at %s\n%s", appName, version, date, desc)
 }
