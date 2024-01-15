@@ -15,7 +15,7 @@ import (
 func main() {
 	c, err := controller.New(config.ReadConfig())
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	go func() {

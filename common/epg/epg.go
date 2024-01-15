@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
-
-	"github.com/thank243/iptvChannel/infra"
 )
 
 func BytesToValidEPGs(resp []byte) ([]Epg, error) {
@@ -70,12 +68,12 @@ func (e *Epg) filterValidEPG(tz *time.Location) error {
 
 func (e *Epg) fixEndTime(tz *time.Location) (time.Time, error) {
 	// time format: 20231228001700
-	endTime, err := infra.StrToTime(e.EndTimeFormat, tz)
+	endTime, err := strToTime(e.EndTimeFormat, tz)
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	beginTime, err := infra.StrToTime(e.BeginTimeFormat, tz)
+	beginTime, err := strToTime(e.BeginTimeFormat, tz)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -86,4 +84,13 @@ func (e *Epg) fixEndTime(tz *time.Location) (time.Time, error) {
 	}
 
 	return endTime, nil
+}
+
+func strToTime(t string, tz *time.Location) (time.Time, error) {
+	toTime, err := time.ParseInLocation("20060102150405", t, tz)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return toTime, nil
 }

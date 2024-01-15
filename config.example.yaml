@@ -1,8 +1,10 @@
-LogLevel: debug
-Cron: "5 */12 * * *"
-MaxConcurrent: 5
+LogLevel: debug # trace, debug, info, warn, error, fatal
+Cron: "5 */12 * * *" # same as Cron Expressions
+MaxConcurrent: 5 # not more than 16
 ApiHost: "http://YOUR_API_HOST"
 UserID: "YOUR_IPTV_ID"
 Authenticator: "YOUR_PRIVATE_KEY"
+
 Address: 0.0.0.0:8888
-UdpxyHost: "http://YOUR_UDPXY_ADDR"
+Mode: udpxy # udpxy, igmp, url
+UdpxyHost: "http://YOUR_UDPXY_ADDR" # not blank if mode is udpxy

@@ -6,7 +6,7 @@ import (
 
 const (
 	appName = "iptvChannel"
-	version = "0.0.3"
+	version = "0.0.4"
 	desc    = "Sources: https://www.github.com/thank243/iptvChannel"
 )
 

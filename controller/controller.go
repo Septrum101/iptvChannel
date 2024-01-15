@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
@@ -15,6 +18,28 @@ import (
 )
 
 func New(c *config.Config) (*Controller, error) {
+	// set log level
+	level, err := log.ParseLevel(c.LogLevel)
+	if err != nil {
+		log.Panic(err)
+	}
+	log.SetLevel(level)
+	if level == log.DebugLevel || level == log.TraceLevel {
+		log.SetReportCaller(true)
+	}
+
+	// set provide mode
+	c.Mode = strings.ToUpper(c.Mode)
+	switch c.Mode {
+	case "UDPXY":
+		if c.UdpxyHost == "" {
+			return nil, errors.New("udpxy host is null")
+		}
+	case "IGMP", "URL":
+	default:
+		return nil, fmt.Errorf("unsupported mode: %s", c.Mode)
+	}
+
 	ctrl := &Controller{
 		conf:          c,
 		req:           req.New(c),
@@ -22,12 +47,14 @@ func New(c *config.Config) (*Controller, error) {
 		cron:          cron.New(),
 		maxConcurrent: c.MaxConcurrent,
 	}
+
+	// check max concurrent
 	if c.MaxConcurrent > 16 {
 		ctrl.maxConcurrent = 16
 	}
 
-	_, err := ctrl.cron.AddJob(c.Cron, cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(ctrl))
-	if err != nil {
+	// set cron job skip if still running
+	if _, err := ctrl.cron.AddJob(c.Cron, cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(ctrl)); err != nil {
 		return nil, err
 	}
 
@@ -35,11 +62,13 @@ func New(c *config.Config) (*Controller, error) {
 }
 
 func (c *Controller) Start() error {
-	fmt.Printf("%s\nLogLevel: %s, MaxConcurrent: %d\n", config.GetVersion(), c.conf.LogLevel, c.maxConcurrent)
-	log.Info("Starting service..")
+	fmt.Printf("%s\nLogLevel: %s, MaxConcurrent: %d, Mode: %s\n",
+		config.GetVersion(), c.conf.LogLevel, c.maxConcurrent, strings.ToUpper(c.conf.Mode))
 
+	log.Info("Starting service..")
 	log.Info("Fetch EPGs and Channels data on initial startup")
 	c.Run()
+	time.Sleep(time.Second)
 
 	// start cron job
 	c.cron.Start()
@@ -117,7 +146,10 @@ func (c *Controller) fetchEPGs() error {
 			sem <- true // enter semaphore, will block if there are maxConcurrent tasks running already
 
 			ch := channels[i]
-			logger := log.WithField("channelId", ch.ChannelID)
+			logger := log.WithFields(log.Fields{
+				"ChannelId":   ch.ChannelID,
+				"ChannelName": ch.ChannelName,
+			})
 			logger.Debug("start get EPGs")
 			resp, err := c.req.GetEPGBytes(ch.ChannelID)
 			if err != nil {

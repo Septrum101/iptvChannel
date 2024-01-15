@@ -14,5 +14,6 @@ type Server struct {
 	EPGs     *atomic.Pointer[[]epg.Epg]
 	Channels *atomic.Pointer[[]channel.Channel]
 
+	mode      string
 	udpxyHost string
 }

@@ -23,10 +23,12 @@ import (
 // It returns the created Server instance.
 func New(c *config.Config) *Server {
 	s := &Server{
-		Echo:      echo.New(),
+		Echo:     echo.New(),
+		Channels: new(atomic.Pointer[[]channel.Channel]),
+		EPGs:     new(atomic.Pointer[[]epg.Epg]),
+
+		mode:      c.Mode,
 		udpxyHost: c.UdpxyHost,
-		Channels:  new(atomic.Pointer[[]channel.Channel]),
-		EPGs:      new(atomic.Pointer[[]epg.Epg]),
 	}
 
 	s.Echo.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
@@ -59,17 +61,9 @@ func New(c *config.Config) *Server {
 			return nil
 		},
 	}),
+		middleware.Recover(),
 		middleware.GzipWithConfig(middleware.GzipConfig{Level: 5}),
 	)
-
-	level, err := log.ParseLevel(c.LogLevel)
-	if err != nil {
-		log.Panic(err)
-	}
-	log.SetLevel(level)
-	if level == log.DebugLevel || level == log.TraceLevel {
-		log.SetReportCaller(true)
-	}
 
 	g := s.Echo.Group("/api/v1")
 	g.GET("/getChannels", s.getChannels)
@@ -90,13 +84,17 @@ func (s *Server) getChannels(c echo.Context) error {
 
 	for _, ch := range channels {
 		name := ch.ChannelName
-		addr, err := url.Parse(ch.ChannelURL)
+		addr, err := s.buildChannelUrl(&ch)
 		if err != nil {
+			logger := log.WithFields(log.Fields{
+				"ChannelName": ch.ChannelName,
+			})
+			logger.Debug(err)
 			continue
 		}
 
 		b.WriteString(fmt.Sprintf("#EXTINF:-1, tvg-id=\"%d\" tvg-name=\"%s\", %s\n", ch.ChannelID, name, name))
-		b.WriteString(fmt.Sprintf("%s/rtp/%s\n", s.udpxyHost, addr.Host))
+		b.WriteString(fmt.Sprintf("%s\n", addr))
 	}
 
 	return c.Blob(http.StatusOK, "text/plain;charset=UTF-8", b.Bytes())
@@ -146,4 +144,25 @@ func (s *Server) getEPGs(c echo.Context) error {
 
 	b, _ := doc.WriteToBytes()
 	return c.Blob(http.StatusOK, "text/xml", b)
+}
+
+func (s *Server) buildChannelUrl(ch *channel.Channel) (string, error) {
+	switch s.mode {
+	case "UDPXY":
+		addr, err := url.Parse(ch.ChannelURL)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s/rtp/%s", s.udpxyHost, addr.Host), nil
+	case "IGMP":
+		addr, err := url.Parse(ch.ChannelURL)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("rtp://%s", addr.Host), nil
+	case "URL":
+		return ch.TimeShiftURL, nil
+	default:
+		return "", fmt.Errorf("unsupported mode: %s", s.mode)
+	}
 }

@@ -11,14 +11,7 @@ type Config struct {
 	Authenticator string `yaml:"Authenticator"`
 
 	// Controller
+	Mode      string `yaml:"Mode"`
 	Address   string `yaml:"Address"`
 	UdpxyHost string `yaml:"UdpxyHost"`
-}
-
-var LogLevel = map[string]uint8{
-	"DEBUG": 1,
-	"INFO":  2,
-	"WARN":  3,
-	"ERROR": 4,
-	"OFF":   5,
 }
