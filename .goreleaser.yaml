@@ -24,8 +24,8 @@ builds:
       - darwin
     ldflags:
       - -s -w
-      - -X github.com/thank243/iptvChannel/config.version={{.Version}}
-      - -X github.com/thank243/iptvChannel/config.date={{.Date}}
+      - -X github.com/thank243/iptvChannel/config.version={{ .Version }}
+      - -X github.com/thank243/iptvChannel/config.date={{ .Date }}
 archives:
   - format: tar.gz
     # this name template makes the OS and Arch compatible with the results of `uname`.
@@ -52,4 +52,33 @@ changelog:
 
 dockers:
   - image_templates:
-      - ghcr.io/thank243/iptvchannel
+      - ghcr.io/thank243/iptvchannel:{{ .Tag }}-amd64
+    use: buildx
+    build_flag_templates:
+    - "--pull"
+    - "--platform=linux/amd64"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+    - ghcr.io/thank243/iptvchannel:{{ .Tag }}-arm64
+    use: buildx
+    build_flag_templates:
+    - "--pull"
+    - "--platform=linux/arm64"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+    goarch: arm64
+
+docker_manifests:
+  - name_template: ghcr.io/thank243/iptvchannel:{{ .Tag }}
+    image_templates:
+    - ghcr.io/thank243/iptvchannel:{{ .Tag }}-amd64
+    - ghcr.io/thank243/iptvchannel:{{ .Tag }}-arm64
+  - name_template: ghcr.io/thank243/iptvchannel
+    image_templates:
+    - ghcr.io/thank243/iptvchannel:{{ .Tag }}-amd64
+    - ghcr.io/thank243/iptvchannel:{{ .Tag }}-arm64
