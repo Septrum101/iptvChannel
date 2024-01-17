@@ -1,4 +1,4 @@
-package channel
+package hwtc
 
 import (
 	"regexp"
@@ -8,7 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-func BytesToChannels(resp []byte) ([]Channel, error) {
+func bytesToChannels(resp []byte) ([]Channel, error) {
 	re := regexp.MustCompile(`(?s)ChannelID="\d*".*?ChannelFECPort="\d*"`)
 	data := re.FindAllString(string(resp), -1)
 

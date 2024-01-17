@@ -1,4 +1,27 @@
-package channel
+package hwtc
+
+import (
+	"github.com/go-resty/resty/v2"
+)
+
+type Client struct {
+	cli *resty.Client
+
+	userId        string
+	authenticator string
+}
+
+type Epg struct {
+	BeginTimeFormat string `json:"beginTimeFormat" mapstructure:"beginTimeFormat"`
+	ChannelId       string `json:"channelId" mapstructure:"channelId"`
+	ContentId       string `json:"contentId" mapstructure:"contentId"`
+	EndTime         string `json:"endTime" mapstructure:"endTime"`
+	EndTimeFormat   string `json:"endTimeFormat" mapstructure:"endTimeFormat"`
+	Index           string `json:"index" mapstructure:"index"`
+	IsPlayable      string `json:"isPlayable" mapstructure:"isPlayable"`
+	ProgramName     string `json:"programName" mapstructure:"programName"`
+	StartTime       string `json:"startTime" mapstructure:"startTime"`
+}
 
 type Channel struct {
 	ActionType       string `mapstructure:"ActionType"`

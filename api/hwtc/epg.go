@@ -1,4 +1,4 @@
-package epg
+package hwtc
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-func BytesToValidEPGs(resp []byte) ([]Epg, error) {
+func bytesToValidEPGs(resp []byte) ([]Epg, error) {
 	re := regexp.MustCompile(`(?s)\[.*]`)
 	b := re.FindSubmatch(resp)
 	if b == nil {

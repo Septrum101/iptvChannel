@@ -13,8 +13,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/thank243/iptvChannel/common/channel"
-	"github.com/thank243/iptvChannel/common/epg"
+	"github.com/thank243/iptvChannel/api"
 	"github.com/thank243/iptvChannel/config"
 )
 
@@ -24,8 +23,8 @@ import (
 func New(c *config.Config) *Server {
 	s := &Server{
 		Echo:     echo.New(),
-		Channels: new(atomic.Pointer[[]channel.Channel]),
-		EPGs:     new(atomic.Pointer[[]epg.Epg]),
+		Channels: new(atomic.Pointer[[]api.Channel]),
+		EPGs:     new(atomic.Pointer[[]api.Epg]),
 
 		mode:      c.Mode,
 		udpxyHost: c.UdpxyHost,
@@ -146,7 +145,7 @@ func (s *Server) getEPGs(c echo.Context) error {
 	return c.Blob(http.StatusOK, "text/xml", b)
 }
 
-func (s *Server) buildChannelUrl(ch *channel.Channel) (string, error) {
+func (s *Server) buildChannelUrl(ch *api.Channel) (string, error) {
 	switch s.mode {
 	case "UDPXY":
 		addr, err := url.Parse(ch.ChannelURL)

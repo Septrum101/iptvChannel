@@ -1,14 +1,14 @@
-package req
+package hwtc
 
 import (
 	"errors"
 	"net/http"
 )
 
-func (r *Req) updateCookie() error {
-	resp, err := r.Cli.R().SetQueryParams(map[string]string{
-		"UserID":        r.userId,
-		"Authenticator": r.authenticator,
+func (c *Client) updateCookie() error {
+	resp, err := c.cli.R().SetQueryParams(map[string]string{
+		"UserID":        c.userId,
+		"Authenticator": c.authenticator,
 	}).Post("ValidAuthenticationHWCTC.jsp")
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func (r *Req) updateCookie() error {
 		}
 	}
 	if isLogin {
-		r.Cli.SetCookie(cookie)
+		c.cli.SetCookie(cookie)
 		return nil
 	}
 

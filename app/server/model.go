@@ -5,14 +5,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/thank243/iptvChannel/common/channel"
-	"github.com/thank243/iptvChannel/common/epg"
+	"github.com/thank243/iptvChannel/api"
 )
 
 type Server struct {
 	Echo     *echo.Echo
-	EPGs     *atomic.Pointer[[]epg.Epg]
-	Channels *atomic.Pointer[[]channel.Channel]
+	EPGs     *atomic.Pointer[[]api.Epg]
+	Channels *atomic.Pointer[[]api.Channel]
 
 	mode      string
 	udpxyHost string

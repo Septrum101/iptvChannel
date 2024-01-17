@@ -1,4 +1,4 @@
-package req
+package hwtc
 
 import (
 	"testing"
@@ -17,7 +17,7 @@ func TestGetEPG(t *testing.T) {
 	c := config.ReadConfig()
 	r := New(c)
 
-	_, err := r.GetEPGBytes(655980640)
+	_, err := r.getEPGBytes(655980640)
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,7 +28,7 @@ func TestGetChannel(t *testing.T) {
 	c := config.ReadConfig()
 	r := New(c)
 
-	_, err := r.GetChannelBytes()
+	_, err := r.getChannelBytes()
 	if err != nil {
 		t.Error(err)
 	}

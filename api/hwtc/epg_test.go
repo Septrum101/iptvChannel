@@ -1,22 +1,21 @@
-package epg
+package hwtc
 
 import (
 	"testing"
 
-	"github.com/thank243/iptvChannel/common/req"
 	"github.com/thank243/iptvChannel/config"
 )
 
 func TestGetEpg(t *testing.T) {
 	c := config.ReadConfig()
-	r := req.New(c)
+	r := New(c)
 
-	resp, err := r.GetEPGBytes(3954)
+	resp, err := r.getEPGBytes(3954)
 	if err != nil {
 		t.Error(err)
 	}
 
-	validEs, err := BytesToValidEPGs(resp)
+	validEs, err := bytesToValidEPGs(resp)
 	if err != nil {
 		t.Error(err)
 	}

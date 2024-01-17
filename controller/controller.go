@@ -10,10 +10,10 @@ import (
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/thank243/iptvChannel/api"
+	"github.com/thank243/iptvChannel/api/hwtc"
+	"github.com/thank243/iptvChannel/api/zteg"
 	"github.com/thank243/iptvChannel/app/server"
-	"github.com/thank243/iptvChannel/common/channel"
-	"github.com/thank243/iptvChannel/common/epg"
-	"github.com/thank243/iptvChannel/common/req"
 	"github.com/thank243/iptvChannel/config"
 )
 
@@ -42,10 +42,19 @@ func New(c *config.Config) (*Controller, error) {
 
 	ctrl := &Controller{
 		conf:          c,
-		req:           req.New(c),
 		server:        server.New(c),
 		cron:          cron.New(),
 		maxConcurrent: c.MaxConcurrent,
+	}
+
+	// set api provider
+	switch strings.ToLower(c.Api.Provider) {
+	case "hwtc":
+		ctrl.cli = hwtc.New(c)
+	case "zteg":
+		ctrl.cli = zteg.New(c)
+	default:
+		return nil, fmt.Errorf("unsupported mode: %s", c.Api.Provider)
 	}
 
 	// check max concurrent
@@ -62,8 +71,8 @@ func New(c *config.Config) (*Controller, error) {
 }
 
 func (c *Controller) Start() error {
-	fmt.Printf("%s\nLogLevel: %s, MaxConcurrent: %d, Mode: %s\n",
-		config.GetVersion(), c.conf.LogLevel, c.maxConcurrent, strings.ToUpper(c.conf.Mode))
+	fmt.Printf("%s\nLogLevel: %s, MaxConcurrent: %d, Mode: %s, Provider: %s\n",
+		config.GetVersion(), c.conf.LogLevel, c.maxConcurrent, strings.ToUpper(c.conf.Mode), c.conf.Api.Provider)
 
 	log.Info("Starting service..")
 	log.Info("Fetch EPGs and Channels data on initial startup")
@@ -103,12 +112,7 @@ func (c *Controller) Run() {
 func (c *Controller) fetchChannels() error {
 	log.Info("Fetch Channels")
 
-	buf, err := c.req.GetChannelBytes()
-	if err != nil {
-		return err
-	}
-
-	channels, err := channel.BytesToChannels(buf)
+	channels, err := c.cli.GetChannels()
 	if err != nil {
 		return err
 	}
@@ -131,7 +135,7 @@ func (c *Controller) fetchEPGs() error {
 
 	channels := *c.server.Channels.Load()
 
-	var epgChan = make(chan epg.Epg)
+	var epgChan = make(chan api.Epg)
 	var wg sync.WaitGroup
 
 	sem := make(chan bool, c.maxConcurrent) // This is used to limit the number of goroutines to maxConcurrent
@@ -151,12 +155,8 @@ func (c *Controller) fetchEPGs() error {
 				"ChannelName": ch.ChannelName,
 			})
 			logger.Debug("start get EPGs")
-			resp, err := c.req.GetEPGBytes(ch.ChannelID)
-			if err != nil {
-				logger.Error(err)
-				return
-			}
-			epgs, err := epg.BytesToValidEPGs(resp)
+
+			epgs, err := c.cli.GetEPGs(ch.ChannelID)
 			if err != nil {
 				logger.Error(err)
 				return
@@ -174,7 +174,7 @@ func (c *Controller) fetchEPGs() error {
 	}()
 
 	// Consume results from the channel and append to slice
-	var esSlice []epg.Epg
+	var esSlice []api.Epg
 	for e := range epgChan {
 		esSlice = append(esSlice, e)
 	}

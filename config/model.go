@@ -5,13 +5,17 @@ type Config struct {
 	Cron          string `yaml:"Cron"`
 	MaxConcurrent int    `yaml:"MaxConcurrent"`
 
-	// Req
-	ApiHost       string `yaml:"ApiHost"`
-	UserID        string `yaml:"UserID"`
-	Authenticator string `yaml:"Authenticator"`
+	// Client
+	Api api `yaml:"Api"`
 
 	// Controller
 	Mode      string `yaml:"Mode"`
 	Address   string `yaml:"Address"`
 	UdpxyHost string `yaml:"UdpxyHost"`
+}
+
+type api struct {
+	Provider string            `yaml:"Provider"`
+	ApiHost  string            `yaml:"ApiHost"`
+	Auth     map[string]string `yaml:"Auth"`
 }

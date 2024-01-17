@@ -1,0 +1,36 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+    contents: write
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm64]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: arm64
+            goos: windows
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get Time
+      id: get_time
+      run: echo ::set-output name=BuildTime::$(date -Iseconds)
+    - uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        binary_name: "iptvChanel"
+        extra_files: LICENSE README.md config.example.yaml
+        ldflags: -X "github.com/thank243/iptvChannel/config.date=${{ steps.get_time.outputs.BuildTime }}" -X "github.com/thank243/iptvChannel/config.version=${{ github.ref_name }}"
