@@ -1,4 +1,4 @@
-package hwtc
+package zteg
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ func (c *Client) updateCookie() error {
 	resp, err := c.cli.R().SetFormData(map[string]string{
 		"UserID":        c.userId,
 		"Authenticator": c.authenticator,
-	}).Post("ValidAuthenticationHWCTC.jsp")
+	}).Post("platform/auth.jsp")
 	if err != nil {
 		return err
 	}

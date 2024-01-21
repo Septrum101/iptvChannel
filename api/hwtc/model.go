@@ -29,7 +29,7 @@ type Channel struct {
 	ChannelFCCIP     string `mapstructure:"ChannelFCCIP"`
 	ChannelFCCPort   string `mapstructure:"ChannelFCCPort"`
 	ChannelFECPort   string `mapstructure:"ChannelFECPort"`
-	ChannelID        int    `mapstructure:"ChannelID"`
+	ChannelID        string `mapstructure:"ChannelID"`
 	ChannelLocked    string `mapstructure:"ChannelLocked"`
 	ChannelLogURL    string `mapstructure:"ChannelLogURL"`
 	ChannelName      string `mapstructure:"ChannelName"`

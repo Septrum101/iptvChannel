@@ -1,4 +1,4 @@
-package hwtc
+package zteg
 
 import (
 	"regexp"
@@ -8,11 +8,11 @@ import (
 )
 
 func bytesToChannels(resp []byte) ([]Channel, error) {
-	re := regexp.MustCompile(`ChannelID="\w+".*?ChannelFECPort="\d+"`)
+	re := regexp.MustCompile(`ChannelID="\w+".*?ChannelFCCPort="\d+"`)
 	data := re.FindAll(resp, -1)
 
 	var channelMaps []map[string]string
-	re2 := regexp.MustCompile(`画中画|单音轨`)
+	re2 := regexp.MustCompile(`PIP`)
 	for i := range data {
 		if re2.Match(data[i]) {
 			continue

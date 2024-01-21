@@ -1,8 +1,8 @@
 package hwtc
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -14,8 +14,7 @@ import (
 
 func New(conf *config.Config) *Client {
 	r := &Client{
-		cli: resty.New().SetRetryCount(3).SetBaseURL(fmt.Sprintf("%s/EPG/jsp", conf.Api.ApiHost)),
-
+		cli:           resty.New().SetRetryCount(3).SetBaseURL(fmt.Sprintf("%s/EPG/jsp", conf.Api.ApiHost)),
 		userId:        conf.Api.Auth["userid"],
 		authenticator: conf.Api.Auth["authenticator"],
 	}
@@ -23,16 +22,16 @@ func New(conf *config.Config) *Client {
 	return r
 }
 
-func (c *Client) getEPGBytes(channelId int) ([]byte, error) {
+func (c *Client) getEPGBytes(channelId string) ([]byte, error) {
 	var buf []byte
 	for i := 0; i < 3; i++ {
-		resp, err := c.cli.R().ForceContentType("text/html;charset=UTF-8").SetQueryParam("channelId", strconv.Itoa(channelId)).
+		resp, err := c.cli.R().ForceContentType("text/html;charset=UTF-8").SetQueryParam("channelId", channelId).
 			Get("stliveplay_30/en/getTvodData.jsp")
 		if err != nil {
 			return nil, err
 		}
 
-		if strings.Contains(resp.String(), "(\"resignon\",\"1\")") {
+		if strings.Contains(resp.String(), "resignon") {
 			time.Sleep(time.Second * 3)
 			if err := c.updateCookie(); err != nil {
 				return nil, err
@@ -46,7 +45,7 @@ func (c *Client) getEPGBytes(channelId int) ([]byte, error) {
 	return buf, nil
 }
 
-func (c *Client) GetEPGs(id int) ([]api.Epg, error) {
+func (c *Client) GetEPGs(id string) ([]api.Epg, error) {
 	buf, err := c.getEPGBytes(id)
 	if err != nil {
 		return nil, err
@@ -72,8 +71,6 @@ func (c *Client) GetEPGs(id int) ([]api.Epg, error) {
 }
 
 func (c *Client) getChannelBytes() ([]byte, error) {
-	var buf []byte
-
 	for i := 0; i < 3; i++ {
 		resp, err := c.cli.R().
 			Get("getchannellistHWCTC.jsp")
@@ -81,18 +78,16 @@ func (c *Client) getChannelBytes() ([]byte, error) {
 			return nil, err
 		}
 
-		if strings.Contains(resp.String(), "(\"resignon\",\"1\")") {
+		if strings.Contains(resp.String(), "resignon") {
 			time.Sleep(time.Second * 3)
 			if err := c.updateCookie(); err != nil {
 				return nil, err
 			}
-
 			continue
 		}
-		buf = resp.Body()
-		break
+		return resp.Body(), nil
 	}
-	return buf, nil
+	return nil, errors.New("retry after 3 times")
 }
 
 func (c *Client) GetChannels() ([]api.Channel, error) {

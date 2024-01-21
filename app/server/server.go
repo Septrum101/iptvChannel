@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"sync/atomic"
 
 	"github.com/beevik/etree"
@@ -116,7 +115,7 @@ func (s *Server) getEPGs(c echo.Context) error {
 		ch := channels[i]
 		// create channel, format: <channel id="1"><display-name lang="zh">CCTV1</display-name></channel>
 		channelXml := tv.CreateElement("channel")
-		channelXml.CreateAttr("id", strconv.Itoa(ch.ChannelID))
+		channelXml.CreateAttr("id", ch.ChannelID)
 		name := channelXml.CreateElement("display-name")
 		name.CreateAttr("lang", "zh")
 		name.CreateText(ch.ChannelName)

@@ -75,7 +75,7 @@ func (c *Controller) Start() error {
 		config.GetVersion(), c.conf.LogLevel, c.maxConcurrent, strings.ToUpper(c.conf.Mode), c.conf.Api.Provider)
 
 	log.Info("Starting service..")
-	log.Info("Fetch EPGs and Channels data on initial startup")
+	log.Info("Fetch Channels and EPGs data on initial startup")
 	c.Run()
 	time.Sleep(time.Second)
 
@@ -105,7 +105,7 @@ func (c *Controller) Run() {
 	}
 
 	if err := c.fetchEPGs(); err != nil {
-		return
+		log.Error(err)
 	}
 }
 

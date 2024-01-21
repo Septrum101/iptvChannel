@@ -2,11 +2,11 @@ package api
 
 type Client interface {
 	GetChannels() ([]Channel, error)
-	GetEPGs(id int) ([]Epg, error)
+	GetEPGs(id string) ([]Epg, error)
 }
 
 type Channel struct {
-	ChannelID    int
+	ChannelID    string
 	ChannelName  string
 	ChannelURL   string
 	TimeShiftURL string
