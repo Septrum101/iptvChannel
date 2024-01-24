@@ -8,7 +8,7 @@ import (
 )
 
 func bytesToChannels(resp []byte) ([]Channel, error) {
-	re := regexp.MustCompile(`ChannelID="\w+".*?ChannelFCCPort="\d+"`)
+	re := regexp.MustCompile(`'ChannelID=.*?'`)
 	data := re.FindAll(resp, -1)
 
 	var channelMaps []map[string]string
@@ -18,13 +18,11 @@ func bytesToChannels(resp []byte) ([]Channel, error) {
 			continue
 		}
 
-		d := data[i]
-		res := strings.Split(string(d), ",")
+		res := strings.Split(strings.ReplaceAll(strings.Trim(string(data[i]), "'"), "\"", ""), ",")
 		kvMap := make(map[string]string)
 		for ii := range res {
 			kvs := strings.SplitN(res[ii], "=", 2)
-			val := strings.Trim(kvs[1], "\"")
-			kvMap[kvs[0]] = val
+			kvMap[kvs[0]] = kvs[1]
 		}
 		channelMaps = append(channelMaps, kvMap)
 	}

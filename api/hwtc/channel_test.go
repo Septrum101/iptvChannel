@@ -15,6 +15,11 @@ func TestGetChannels(t *testing.T) {
 		t.Error(err)
 	}
 
+	// resp, err := os.ReadFile("channel.bin")
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+
 	channels, err := bytesToChannels(resp)
 	if err != nil {
 		t.Log(err)

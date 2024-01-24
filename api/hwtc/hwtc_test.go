@@ -17,7 +17,7 @@ func TestGetEPG(t *testing.T) {
 	c := config.ReadConfig()
 	r := New(c)
 
-	_, err := r.getEPGBytes(655980640)
+	_, err := r.getEPGBytes("655980640")
 	if err != nil {
 		t.Error(err)
 	}

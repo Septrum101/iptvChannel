@@ -17,6 +17,7 @@ func New(conf *config.Config) *Client {
 		cli:           resty.New().SetRetryCount(3).SetBaseURL(fmt.Sprintf("%s/EPG/jsp", conf.Api.ApiHost)),
 		userId:        conf.Api.Auth["userid"],
 		authenticator: conf.Api.Auth["authenticator"],
+		epgPath:       conf.Api.EPGPath,
 	}
 
 	return r
@@ -26,7 +27,7 @@ func (c *Client) getEPGBytes(channelId string) ([]byte, error) {
 	var buf []byte
 	for i := 0; i < 3; i++ {
 		resp, err := c.cli.R().ForceContentType("text/html;charset=UTF-8").SetQueryParam("channelId", channelId).
-			Get("stliveplay_30/en/getTvodData.jsp")
+			Get(c.epgPath)
 		if err != nil {
 			return nil, err
 		}
@@ -72,8 +73,10 @@ func (c *Client) GetEPGs(id string) ([]api.Epg, error) {
 
 func (c *Client) getChannelBytes() ([]byte, error) {
 	for i := 0; i < 3; i++ {
-		resp, err := c.cli.R().
-			Get("getchannellistHWCTC.jsp")
+		resp, err := c.cli.R().SetFormData(map[string]string{
+			"UserToken": c.userToken,
+			"UserID":    c.userId,
+		}).Post("getchannellistHWCTC.jsp")
 		if err != nil {
 			return nil, err
 		}
@@ -104,6 +107,12 @@ func (c *Client) GetChannels() ([]api.Channel, error) {
 	var channels []api.Channel
 	for i := range chs {
 		ch := chs[i]
+
+		// fix channel url
+		if strings.Contains(ch.ChannelURL, "|") {
+			ch.ChannelURL = strings.SplitN(ch.ChannelURL, "|", 2)[0]
+		}
+
 		channels = append(channels, api.Channel{
 			ChannelID:    ch.ChannelID,
 			ChannelName:  ch.ChannelName,

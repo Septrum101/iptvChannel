@@ -1,0 +1,14 @@
+LogLevel: debug # trace, debug, info, warn, error, fatal
+Cron: "5 */12 * * *" # same as Cron Expressions
+MaxConcurrent: 5 # not more than 16
+Address: 0.0.0.0:8888
+Mode: udpxy # udpxy, igmp, url
+UdpxyHost: "http://YOUR_UDPXY_ADDR" # not blank if mode is udpxy
+
+Api:
+  Provider: hwtc # hwtc, zteg
+  ApiHost: "http://YOUR_API_HOST"
+  EPGPath: "PATH_OF_EPG"
+  Auth:
+    UserID: "YOUR_IPTV_ID"
+    Authenticator: "YOUR_PRIVATE_KEY"

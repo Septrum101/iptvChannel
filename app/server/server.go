@@ -91,7 +91,7 @@ func (s *Server) getChannels(c echo.Context) error {
 			continue
 		}
 
-		b.WriteString(fmt.Sprintf("#EXTINF:-1, tvg-id=\"%d\" tvg-name=\"%s\", %s\n", ch.ChannelID, name, name))
+		b.WriteString(fmt.Sprintf("#EXTINF:-1, tvg-id=\"%s\" tvg-name=\"%s\", %s\n", ch.ChannelID, name, name))
 		b.WriteString(fmt.Sprintf("%s\n", addr))
 	}
 

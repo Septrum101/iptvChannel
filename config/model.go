@@ -17,5 +17,6 @@ type Config struct {
 type api struct {
 	Provider string            `yaml:"Provider"`
 	ApiHost  string            `yaml:"ApiHost"`
+	EPGPath  string            `yaml:"EPGPath"`
 	Auth     map[string]string `yaml:"Auth"`
 }
