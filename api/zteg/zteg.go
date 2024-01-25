@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -21,6 +20,7 @@ func New(conf *config.Config) *Client {
 		cli:           resty.New().SetRetryCount(3).SetBaseURL(fmt.Sprintf("%s/iptvepg", conf.Api.ApiHost)),
 		userId:        conf.Api.Auth["userid"],
 		authenticator: conf.Api.Auth["authenticator"],
+		epgPath:       conf.Api.EPGPath,
 	}
 
 	return r
@@ -43,7 +43,6 @@ func (c *Client) getChannelBytes() ([]byte, error) {
 		}
 
 		if strings.Contains(resp.String(), "resignon") {
-			time.Sleep(time.Second * 3)
 			if err := c.updateCookie(); err != nil {
 				return nil, err
 			}

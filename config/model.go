@@ -12,6 +12,7 @@ type Config struct {
 	Mode      string `yaml:"Mode"`
 	Address   string `yaml:"Address"`
 	UdpxyHost string `yaml:"UdpxyHost"`
+	Exclude   string `yaml:"Exclude"`
 }
 
 type api struct {

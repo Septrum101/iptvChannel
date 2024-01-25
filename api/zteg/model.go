@@ -9,6 +9,8 @@ type Client struct {
 
 	userId        string
 	authenticator string
+	userToken     string
+	epgPath       string
 }
 
 type Channel struct {

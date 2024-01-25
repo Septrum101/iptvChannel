@@ -9,16 +9,11 @@ import (
 
 func bytesToChannels(resp []byte) ([]Channel, error) {
 	re := regexp.MustCompile(`'ChannelID=.*?'`)
-	data := re.FindAll(resp, -1)
+	data := re.FindAllString(string(resp), -1)
 
 	var channelMaps []map[string]string
-	re2 := regexp.MustCompile(`画中画|单音轨`)
 	for i := range data {
-		if re2.Match(data[i]) {
-			continue
-		}
-
-		res := strings.Split(strings.ReplaceAll(strings.Trim(string(data[i]), "'"), "\"", ""), ",")
+		res := strings.Split(strings.Trim(strings.ReplaceAll(data[i], "\"", ""), "'"), ",")
 		kvMap := make(map[string]string)
 		for ii := range res {
 			kvs := strings.SplitN(res[ii], "=", 2)

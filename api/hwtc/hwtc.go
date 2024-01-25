@@ -82,7 +82,6 @@ func (c *Client) getChannelBytes() ([]byte, error) {
 		}
 
 		if strings.Contains(resp.String(), "resignon") {
-			time.Sleep(time.Second * 3)
 			if err := c.updateCookie(); err != nil {
 				return nil, err
 			}
@@ -107,12 +106,6 @@ func (c *Client) GetChannels() ([]api.Channel, error) {
 	var channels []api.Channel
 	for i := range chs {
 		ch := chs[i]
-
-		// fix channel url
-		if strings.Contains(ch.ChannelURL, "|") {
-			ch.ChannelURL = strings.SplitN(ch.ChannelURL, "|", 2)[0]
-		}
-
 		channels = append(channels, api.Channel{
 			ChannelID:    ch.ChannelID,
 			ChannelName:  ch.ChannelName,

@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -115,6 +116,18 @@ func (c *Controller) fetchChannels() error {
 	channels, err := c.cli.GetChannels()
 	if err != nil {
 		return err
+	}
+
+	// filet valid channels
+	if c.conf.Exclude != "" {
+		re := regexp.MustCompile(c.conf.Exclude)
+		var filteredChannels []api.Channel
+		for _, ch := range channels {
+			if !re.MatchString(ch.ChannelName) {
+				filteredChannels = append(filteredChannels, ch)
+			}
+		}
+		channels = filteredChannels
 	}
 
 	c.server.Channels.Store(&channels)

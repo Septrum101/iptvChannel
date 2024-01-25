@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync/atomic"
 
 	"github.com/beevik/etree"
@@ -145,6 +146,11 @@ func (s *Server) getEPGs(c echo.Context) error {
 }
 
 func (s *Server) buildChannelUrl(ch *api.Channel) (string, error) {
+	// fix channel url
+	if strings.Contains(ch.ChannelURL, "|") {
+		ch.ChannelURL = strings.SplitN(ch.ChannelURL, "|", 2)[0]
+	}
+
 	switch s.mode {
 	case "UDPXY":
 		addr, err := url.Parse(ch.ChannelURL)

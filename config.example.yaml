@@ -4,6 +4,7 @@ MaxConcurrent: 5 # not more than 16
 Address: 0.0.0.0:8888
 Mode: udpxy # udpxy, igmp, url
 UdpxyHost: "http://YOUR_UDPXY_ADDR" # not blank if mode is udpxy
+Exclude: "画中画|单音轨|PIP"
 
 Api:
   Provider: hwtc # hwtc, zteg
