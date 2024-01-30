@@ -183,6 +183,7 @@ func (c *Controller) fetchEPGs() error {
 	// Close the channel after all work has been done
 	go func() {
 		wg.Wait()
+		close(sem)
 		close(epgChan)
 	}()
 

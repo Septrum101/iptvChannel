@@ -12,14 +12,14 @@ import (
 )
 
 func bytesToValidEPGs(resp []byte) ([]Epg, error) {
-	re := regexp.MustCompile(`(?s)\[.*]`)
-	b := re.FindSubmatch(resp)
+	re := regexp.MustCompile(`\[.+]`)
+	b := re.Find(resp)
 	if b == nil {
 		return nil, errors.New("not found valid data")
 	}
 
 	var es []any
-	if err := json.Unmarshal(b[0], &es); err != nil {
+	if err := json.Unmarshal(b, &es); err != nil {
 		return nil, err
 	}
 
@@ -30,6 +30,10 @@ func bytesToValidEPGs(resp []byte) ([]Epg, error) {
 	var data [][]Epg
 	if err := mapstructure.Decode(es[1], &data); err != nil {
 		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, errors.New("no valid EPGs info")
 	}
 
 	var validEPGs []Epg

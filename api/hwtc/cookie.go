@@ -1,14 +1,21 @@
 package hwtc
 
 import (
-	"bytes"
 	"errors"
-
-	"github.com/PuerkitoBio/goquery"
+	"regexp"
+	"strings"
 )
 
 func (c *Client) updateCookie() error {
+	// get user token
+	token, err := c.getUserToken()
+	if err != nil {
+		return err
+	}
+	c.userToken = token
+
 	resp, err := c.cli.R().SetFormData(map[string]string{
+		"userToken":     c.userToken,
 		"UserID":        c.userId,
 		"STBType":       "TY1613",
 		"Authenticator": c.authenticator,
@@ -16,21 +23,6 @@ func (c *Client) updateCookie() error {
 	if err != nil {
 		return err
 	}
-
-	// get user token
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp.Body()))
-	if err != nil {
-		return err
-	}
-	doc.Find("input").Each(func(i int, selection *goquery.Selection) {
-		if val, ok := selection.Attr("name"); ok {
-			if val == "UserToken" {
-				if token, ok := selection.Attr("value"); ok {
-					c.userToken = token
-				}
-			}
-		}
-	})
 
 	// get valid cookie
 	cookies := resp.Cookies()
@@ -42,4 +34,22 @@ func (c *Client) updateCookie() error {
 	}
 
 	return errors.New("no valid cookie")
+}
+
+func (c *Client) getUserToken() (string, error) {
+	resp, err := c.cli.R().SetFormData(map[string]string{
+		"UserID": c.userId,
+	}).Post("authLoginHWCTC.jsp")
+	if err != nil {
+		return "", err
+	}
+
+	re := regexp.MustCompile(`userToken.+?"\w+?"`)
+
+	kv := strings.Split(string(re.Find(resp.Body())), "=")
+	if len(kv) != 2 {
+		return "", errors.New("not found valid user token")
+	}
+
+	return strings.Trim(kv[1], "\" "), nil
 }
