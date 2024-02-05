@@ -171,7 +171,7 @@ func (c *Controller) fetchEPGs() error {
 
 			epgs, err := c.cli.GetEPGs(ch.ChannelID)
 			if err != nil {
-				logger.Error(err)
+				logger.Debug(err)
 				return
 			}
 			for i := range epgs {
