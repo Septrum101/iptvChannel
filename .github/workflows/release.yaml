@@ -33,4 +33,4 @@ jobs:
         goarch: ${{ matrix.goarch }}
         binary_name: "iptvChanel"
         extra_files: LICENSE README.md config.example.yaml
-        ldflags: -X "github.com/thank243/iptvChannel/config.date=${{ steps.get_time.outputs.BuildTime }}" -X "github.com/thank243/iptvChannel/config.version=${{ github.ref_name }}"
+        ldflags: -X "github.com/${{ github.actor }}/iptvChannel/config.date=${{ steps.get_time.outputs.BuildTime }}" -X "github.com/${{ github.actor }}/iptvChannel/config.version=${{ github.ref_name }}"
