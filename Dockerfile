@@ -7,8 +7,8 @@ COPY . .
 
 RUN go mod tidy
 RUN go build -trimpath -ldflags="-s -w \
-    -X 'github.com/thank243/iptvChannel/config.date=$(date -Iseconds)' \
-    -X 'github.com/thank243/iptvChannel/config.version=$VERSION' \
+    -X 'github.com/Septrum101/iptvChannel/config.date=$(date -Iseconds)' \
+    -X 'github.com/Septrum101/iptvChannel/config.version=$VERSION' \
     " -v -o iptvChannel main.go
 
 FROM alpine

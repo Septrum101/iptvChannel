@@ -8,8 +8,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/thank243/iptvChannel/config"
-	"github.com/thank243/iptvChannel/controller"
+	"github.com/Septrum101/iptvChannel/config"
+	"github.com/Septrum101/iptvChannel/controller"
 )
 
 func main() {

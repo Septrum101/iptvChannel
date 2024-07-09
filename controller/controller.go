@@ -11,11 +11,11 @@ import (
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/thank243/iptvChannel/api"
-	"github.com/thank243/iptvChannel/api/hwtc"
-	"github.com/thank243/iptvChannel/api/zteg"
-	"github.com/thank243/iptvChannel/app/server"
-	"github.com/thank243/iptvChannel/config"
+	"github.com/Septrum101/iptvChannel/api"
+	"github.com/Septrum101/iptvChannel/api/hwtc"
+	"github.com/Septrum101/iptvChannel/api/zteg"
+	"github.com/Septrum101/iptvChannel/app/server"
+	"github.com/Septrum101/iptvChannel/config"
 )
 
 func New(c *config.Config) (*Controller, error) {
@@ -188,13 +188,42 @@ func (c *Controller) fetchEPGs() error {
 	}()
 
 	// Consume results from the channel and append to slice
-	var esSlice []api.Epg
+	var epgList []api.Epg
+	diypEPGMaps := make(map[string]map[string][]server.DiypEPG)
 	for e := range epgChan {
-		esSlice = append(esSlice, e)
+		chName := c.server.GetChannelNameFromID(e.ChannelId)
+		if chName != "" {
+			start := toDiypTimeFormat(e.BeginTimeFormat)
+			end := toDiypTimeFormat(e.EndTimeFormat)
+			programDay := start.Format("2006-01-02")
+
+			if diyp, ok := diypEPGMaps[chName]; !ok {
+				diypEPGMaps[chName] = make(map[string][]server.DiypEPG)
+			} else {
+				diyp[programDay] = append(diyp[programDay], server.DiypEPG{
+					Start: start.Format("15:04"),
+					End:   end.Format("15:04"),
+					Title: e.ProgramName,
+				})
+			}
+		}
+
+		epgList = append(epgList, e)
 	}
 
-	c.server.EPGs.Store(&esSlice)
-	log.Infof("Get EPGs: %d", len(esSlice))
+	c.server.EPGs.Store(&epgList)
+
+	for chName := range diypEPGMaps {
+		c.server.DiypEPGs.Store(chName, diypEPGMaps[chName])
+	}
+
+	log.Infof("Get EPGs: %d", len(epgList))
 
 	return nil
+}
+
+// convert time	20240103215500 to 21:55
+func toDiypTimeFormat(t string) *time.Time {
+	parseTime, _ := time.Parse("20060102150405", t)
+	return &parseTime
 }

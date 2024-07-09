@@ -3,9 +3,9 @@ package controller
 import (
 	"github.com/robfig/cron/v3"
 
-	"github.com/thank243/iptvChannel/api"
-	"github.com/thank243/iptvChannel/app/server"
-	"github.com/thank243/iptvChannel/config"
+	"github.com/Septrum101/iptvChannel/api"
+	"github.com/Septrum101/iptvChannel/app/server"
+	"github.com/Septrum101/iptvChannel/config"
 )
 
 type Controller struct {

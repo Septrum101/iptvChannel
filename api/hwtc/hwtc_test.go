@@ -3,7 +3,7 @@ package hwtc
 import (
 	"testing"
 
-	"github.com/thank243/iptvChannel/config"
+	"github.com/Septrum101/iptvChannel/config"
 )
 
 func TestGetCookie(t *testing.T) {

@@ -3,7 +3,7 @@ package zteg
 import (
 	"testing"
 
-	"github.com/thank243/iptvChannel/config"
+	"github.com/Septrum101/iptvChannel/config"
 )
 
 func TestGetChannels(t *testing.T) {

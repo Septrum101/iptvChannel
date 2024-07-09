@@ -3,7 +3,6 @@ package hwtc
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -37,11 +36,10 @@ func bytesToValidEPGs(resp []byte) ([]Epg, error) {
 	}
 
 	var validEPGs []Epg
-	tz := time.FixedZone("CST", 8*60*60)
 	for i := range data {
 		e := data[i]
 		for ii := range e {
-			if err := e[ii].filterValidEPG(tz); err != nil {
+			if err := e[ii].filterValidEPG(); err != nil {
 				continue
 			}
 			validEPGs = append(validEPGs, e[ii])
@@ -51,16 +49,15 @@ func bytesToValidEPGs(resp []byte) ([]Epg, error) {
 	return validEPGs, nil
 }
 
-func (e *Epg) filterValidEPG(tz *time.Location) error {
-	endTime, err := e.fixEndTime(tz)
-	if err != nil {
+func (e *Epg) filterValidEPG() error {
+	if _, err := e.fixEndTime(); err != nil {
 		return err
 	}
 
-	if time.Since(endTime) > time.Hour {
-		return fmt.Errorf("not a valid EPG: %s [%s] -> %s", e.ChannelId, e.ProgramName, e.EndTimeFormat)
-
-	}
+	// if time.Since(endTime) > time.Hour {
+	// 	return fmt.Errorf("not a valid EPG: %s [%s] -> %s", e.ChannelId, e.ProgramName, e.EndTimeFormat)
+	//
+	// }
 
 	// fix char 65533 (Replacement Character)
 	if strings.Contains(e.ProgramName, string(rune(65533))) {
@@ -70,14 +67,14 @@ func (e *Epg) filterValidEPG(tz *time.Location) error {
 	return nil
 }
 
-func (e *Epg) fixEndTime(tz *time.Location) (time.Time, error) {
+func (e *Epg) fixEndTime() (time.Time, error) {
 	// time format: 20231228001700
-	endTime, err := strToTime(e.EndTimeFormat, tz)
+	endTime, err := strToTime(e.EndTimeFormat)
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	beginTime, err := strToTime(e.BeginTimeFormat, tz)
+	beginTime, err := strToTime(e.BeginTimeFormat)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -90,8 +87,8 @@ func (e *Epg) fixEndTime(tz *time.Location) (time.Time, error) {
 	return endTime, nil
 }
 
-func strToTime(t string, tz *time.Location) (time.Time, error) {
-	toTime, err := time.ParseInLocation("20060102150405", t, tz)
+func strToTime(t string) (time.Time, error) {
+	toTime, err := time.Parse("20060102150405", t)
 	if err != nil {
 		return time.Time{}, err
 	}

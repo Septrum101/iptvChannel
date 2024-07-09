@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/thank243/iptvChannel/config"
+	"github.com/Septrum101/iptvChannel/config"
 )
 
 func TestFetch(t *testing.T) {
